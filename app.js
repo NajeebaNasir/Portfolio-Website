@@ -338,11 +338,18 @@ function initScrollSpy() {
 window.handleFormSubmit = function() {
   const name = document.getElementById('name').value;
   const email = document.getElementById('email').value;
+  const subject = document.getElementById('subject').value || 'Portfolio Inquiry';
+  const message = document.getElementById('message').value;
   const statusElem = document.getElementById('form-status');
 
   statusElem.style.color = '#00ff9d';
-  statusElem.innerHTML = `<i class="fa-solid fa-circle-check"></i> Thank you, ${name}! Your message has been prepared for najeebavns2019@gmail.com.`;
+  statusElem.innerHTML = `<i class="fa-solid fa-circle-check"></i> Thank you ${name}! Opening your email app to send message to najeebavns2019@gmail.com...`;
 
-  // Reset form
-  document.getElementById('contact-form').reset();
+  // Trigger mailto link with pre-filled content
+  const mailtoUrl = `mailto:najeebavns2019@gmail.com?subject=${encodeURIComponent(subject + ' - from ' + name)}&body=${encodeURIComponent('From: ' + name + ' (' + email + ')\n\n' + message)}`;
+  
+  setTimeout(() => {
+    window.location.href = mailtoUrl;
+    document.getElementById('contact-form').reset();
+  }, 500);
 };
