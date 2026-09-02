@@ -334,34 +334,40 @@ function initScrollSpy() {
   });
 }
 
-// Global Contact Form Handler
-window.handleFormSubmit = function() {
-  const name = document.getElementById('name').value.trim();
-  const email = document.getElementById('email').value.trim();
-  const subject = document.getElementById('subject').value.trim() || 'Portfolio Inquiry';
-  const message = document.getElementById('message').value.trim();
+// Global Contact Form Handler with Web3Forms Direct Inbox Delivery
+window.handleFormSubmit = async function() {
+  const form = document.getElementById('contact-form');
+  const btn = document.getElementById('btn-send-message');
   const statusElem = document.getElementById('form-status');
 
-  const mailtoUrl = `mailto:najeebavns2019@gmail.com?subject=${encodeURIComponent(subject + ' - from ' + name)}&body=${encodeURIComponent('From: ' + name + ' (' + email + ')\n\n' + message)}`;
+  if (!form) return;
 
-  statusElem.style.color = '#00ff9d';
-  statusElem.innerHTML = `
-    <div style="margin-top: 12px; padding: 12px; background: rgba(0, 255, 157, 0.1); border: 1px solid rgba(0, 255, 157, 0.3); border-radius: 8px;">
-      <p style="margin-bottom: 8px;"><i class="fa-solid fa-circle-check"></i> Thank you, <strong>${name}</strong>!</p>
-      <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">If your email app didn't open automatically, click the button below to send your message to <strong>najeebavns2019@gmail.com</strong>:</p>
-      <a href="${mailtoUrl}" target="_blank" class="btn btn-primary btn-sm" style="display: inline-flex; text-decoration: none;">
-        <i class="fa-solid fa-envelope"></i> Send Email to Najeeba
-      </a>
-    </div>
-  `;
+  const origBtnContent = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending Message...';
+  statusElem.innerHTML = '';
 
-  // Attempt protocol redirect
   try {
-    window.open(mailtoUrl, '_blank');
-  } catch (err) {
-    // Protocol handler blocked by browser settings
-  }
+    const formData = new FormData(form);
+    const response = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      body: formData
+    });
 
-  // Reset form inputs
-  document.getElementById('contact-form').reset();
+    const data = await response.json();
+
+    if (data.success) {
+      statusElem.style.color = '#00ff9d';
+      statusElem.innerHTML = `<div style="margin-top: 12px; padding: 12px; background: rgba(0, 255, 157, 0.1); border: 1px solid rgba(0, 255, 157, 0.3); border-radius: 8px;"><i class="fa-solid fa-circle-check"></i> Thank you! Your message has been delivered directly to Najeeba's inbox.</div>`;
+      form.reset();
+    } else {
+      throw new Error(data.message || 'Submission failed');
+    }
+  } catch (err) {
+    statusElem.style.color = '#ff5f56';
+    statusElem.innerHTML = `<div style="margin-top: 12px; padding: 12px; background: rgba(255, 95, 86, 0.1); border: 1px solid rgba(255, 95, 86, 0.3); border-radius: 8px;"><i class="fa-solid fa-circle-exclamation"></i> Something went wrong. Please email <a href="mailto:najeebavns2019@gmail.com" style="color: #00f0ff;">najeebavns2019@gmail.com</a> directly.</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = origBtnContent;
+  }
 };
